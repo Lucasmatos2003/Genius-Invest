@@ -1,0 +1,14 @@
+# Ignorar variáveis de ambiente e chaves secretas
+.env
+
+# Ignorar o ambiente virtual do Python
+venv/
+env/
+
+# Ignorar ficheiros temporários do Python e do sistema
+__pycache__/
+*.pyc
+.DS_Store
+
+# Ignorar a pasta de configurações do VS Code
+.vscode/
