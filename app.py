@@ -46,7 +46,9 @@ def load_market_snapshot() -> list[dict]:
                     "market_cap": summary.get("market_cap"),
                 }
             )
-        except Exception:
+        except Exception as e:
+            # CORREÇÃO 1: Imprimimos o erro no terminal para debug na nuvem
+            print(f"Aviso: Não foi possível carregar os dados de {item['symbol']}. Erro: {e}")
             continue
     return snapshot
 
@@ -267,20 +269,14 @@ def main() -> None:
 
             with st.chat_message("assistant"):
                 
-                # =========================================================
-                # NOVO FILTRO DE SAUDAÇÕES (Muito mais inteligente)
-                # =========================================================
                 palavras_saudacao = ["oi", "olá", "ola", "bom dia", "boa tarde", "boa noite", "tudo bem", "eae"]
                 termos_financeiros = ["ação", "ações", "comprar", "vender", "investir", "petr4", "vale3", "itub4", "mercado", "dividendos", "crescimento", "potencial", "segura", "carteira", "b3"]
                 
                 prompt_min = user_prompt.strip().lower()
                 
-                # Verifica se a frase começa com uma saudação ou é igual a uma saudação
                 comeca_com_saudacao = any(prompt_min.startswith(word) for word in palavras_saudacao)
-                # Verifica se o utilizador escreveu algo sobre o mercado financeiro
                 tem_termo_financeiro = any(termo in prompt_min for termo in termos_financeiros)
                 
-                # Esconde o resumo APENAS SE: for curto (menos de 80 caracteres), começar com saudação e NÃO tiver termos financeiros
                 is_saudacao = comeca_com_saudacao and len(prompt_min) < 80 and not tem_termo_financeiro
                 
                 if not is_saudacao:
@@ -299,7 +295,11 @@ def main() -> None:
 
     if len(st.session_state.messages) == 0:
         st.markdown('<div class="watchlist-title">Ações em foco</div>', unsafe_allow_html=True)
-        snapshot = load_market_snapshot()
+        
+        # CORREÇÃO 2 e 3: Adicionámos o spinner de carregamento e uma mensagem de Fallback
+        with st.spinner("A conectar com o mercado de ações..."):
+            snapshot = load_market_snapshot()
+            
         if snapshot:
             with st.container():
                 for stock in snapshot:
@@ -308,6 +308,9 @@ def main() -> None:
                     col2.markdown(f"Preço: {stock['price']}")
                     col3.markdown(f"Tendência: {stock['trend']}")
                     col4.markdown(f"RSI: {stock['rsi']}")
+        else:
+            # Mostra uma mensagem de aviso caso as ações falhem ao carregar na nuvem
+            st.info("O serviço de cotações está a aquecer ou temporariamente indisponível na nuvem. Pode continuar a fazer perguntas à IA sem problemas!")
 
 
 if __name__ == "__main__":
